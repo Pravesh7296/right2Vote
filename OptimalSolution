@@ -1,0 +1,80 @@
+import java.util.ArrayList;
+import java.util.List;
+
+public class SpacecraftOptimization {
+    static class Instrument {
+        int weight;
+        int volume;
+        int value;
+
+        public Instrument(int weight, int volume, int value) {
+            this.weight = weight;
+            this.volume = volume;
+            this.value = value;
+        }
+    }
+
+    static class Result {
+        int maxValue;
+        List<Integer> selectedInstruments;
+
+        public Result() {
+            this.maxValue = 0;
+            this.selectedInstruments = new ArrayList<>();
+        }
+    }
+
+    public static Result findOptimalInstruments(List<Instrument> instruments, int maxWeight, int maxVolume) {
+        Result[][] dp = new Result[maxWeight + 1][maxVolume + 1];
+
+        // Initialize DP table
+        for (int i = 0; i <= maxWeight; i++) {
+            for (int j = 0; j <= maxVolume; j++) {
+                dp[i][j] = new Result();
+            }
+        }
+
+        // Fill DP table
+        for (int k = 0; k < instruments.size(); k++) {
+            int weight = instruments.get(k).weight;
+            int volume = instruments.get(k).volume;
+            int value = instruments.get(k).value;
+
+            for (int i = maxWeight; i >= weight; i--) {
+                for (int j = maxVolume; j >= volume; j--) {
+                    if (dp[i - weight][j - volume].maxValue + value > dp[i][j].maxValue) {
+                        dp[i][j].maxValue = dp[i - weight][j - volume].maxValue + value;
+                        dp[i][j].selectedInstruments = new ArrayList<>(dp[i - weight][j - volume].selectedInstruments);
+                        dp[i][j].selectedInstruments.add(k + 1);
+                    }
+                }
+            }
+        }
+
+        return dp[maxWeight][maxVolume];
+    }
+
+    public static void main(String[] args) {
+        List<Instrument> instruments = List.of(
+            new Instrument(3, 2, 10), 
+            new Instrument(4, 3, 15),  
+            new Instrument(2, 1, 8),  
+            new Instrument(5, 4, 20)   
+        );
+
+        int maxWeight = 10;
+        int maxVolume = 7;
+
+        Result result = findOptimalInstruments(instruments, maxWeight, maxVolume);
+        System.out.println("Selected Instruments: " + result.selectedInstruments);
+        int totalWeight = 0, totalVolume = 0;
+        for (int index : result.selectedInstruments) {
+            Instrument inst = instruments.get(index - 1);
+            totalWeight += inst.weight;
+            totalVolume += inst.volume;
+        }
+        System.out.println("Total Weight: " + totalWeight + " kg");
+        System.out.println("Total Volume: " + totalVolume + " m^3");
+        System.out.println("Total Scientific Value: " + result.maxValue);
+    }
+}
